@@ -1,0 +1,112 @@
+%% Prepare USB webcameras
+
+% clear cams
+% delete(topcam)
+% delete(sidecam)
+
+vid = webcamlist;
+
+topcam = webcam('Logitech HD Pro Webcam C920');
+set(topcam, 'ExposureMode', 'auto');
+
+axes(handles.toppreview)
+% preview(topcam)
+topimg = snapshot(topcam);
+ti = imshow(topimg);
+% pause(2)
+% delete(ti)
+
+% axes(handles.sidepreview)
+sidecam = webcam('Logitech HD Webcam C270');
+set(sidecam, 'ExposureMode', 'auto')
+% sideimg = snapshot(sidecam);
+
+
+%% Open Com port with Arduino and configure servo motor
+
+delete(instrfind({'Port'},{'COM4'}))
+
+if exist('a','var') && isa(a,'arduino') && isvalid(a),
+%     nothing to do
+else
+    a=arduino('COM4');
+end
+
+set(topcam, 'ExposureMode', 'manual');
+set(sidecam, 'ExposureMode', 'manual')
+% attach servo on pin #7
+servoAttach(a,7);
+servoStatus(a,7);
+val=servoRead(a,7);
+
+% sweep
+pos = 75;
+servoWrite(a,7,pos);
+pause(.5)
+
+servoWrite(a,7,115);
+pause(.5)
+
+pos = 96;
+servoWrite(a,7,pos);
+% rotates servo on pin #9 to 100 degrees
+pause(.5)
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%Process loop%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% axes(handles.topcam)
+% cla
+
+accepted = 0;
+reject = 0;
+
+i=1;
+while i == 1;
+    
+
+    axes(handles.toppreview)
+    topimg = snapshot(topcam) ;
+    ti = imshow(topimg);
+    
+%     pause(0.5)
+%     axes(handles.sidepreview)
+%     sideimg = snapshot(sidecam) ;
+%     imshow(sideimg) ; 
+    [handles] = pebbles_belt_topengine1(handles, topimg, a); % analyse top cam based on side cam.
+   
+    
+    %%
+
+    
+    
+end
+        
+
+    
+
+% set(handles.time, 'string', elapsedtime);
+    
+       
+% drawnow
+%     br = get(handles.br,'Value')
+%     if br == 1;
+%         break
+%     end
+%     
+%     paws = get(handles.paws, 'Value')
+%     if paws == 1;
+%         pause
+%         display('Hit the Any key (really hard) to resume.')
+%     end
+    
+
+
+%% Close components. Never gets to this stage. 
+
+delete(topcam)
+delete(sidecam)
+delete(a)  % end arduino session
+
+clear all
